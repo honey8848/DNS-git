@@ -268,7 +268,7 @@ void buf2messageQuestion(const char *buf, message_t *message, int *endPos)
     {
         // QNAME
         int QValuePos = 0;
-        char QValue[512] = {};
+        char QValue[512] = {0};
 
         while (buf[bufPos] != 0)
         {
@@ -286,8 +286,9 @@ void buf2messageQuestion(const char *buf, message_t *message, int *endPos)
         }
 
         QValue[QValuePos - 1] = '\0';
-        char QResult[QValuePos];
+        char *QResult = malloc(QValuePos);
         message->queries[entryNum].name = string_malloc(QValue, QValuePos - 1);
+        free(QResult);
         // 注意这个length不包括末尾的\0
         bufPos++;
 
@@ -333,14 +334,15 @@ void buf2messageRR(const char *buf, message_t *message, const int *endPos, enum 
     for (int entryNum = 0; entryNum < resourceRecordCount; entryNum++)
     {
         // NAME
-        char Name[512] = {};
+        char Name[512] = {0};
         int namePos = 0;
 
         bufPos = createName(buf, bufPos, Name, &namePos);
 
         Name[namePos - 1] = '\0';
-        char result[namePos];
+        char *result = malloc(namePos);
         resourceRecord[entryNum].name = string_malloc(strcpy(result, Name), namePos - 1);
+        free(result);
         // 注意这个length不包括末尾的\0
         bufPos++;
 
@@ -363,7 +365,7 @@ void buf2messageRR(const char *buf, message_t *message, const int *endPos, enum 
         bufPos += 2;
 
         //RDATA
-        char RData[512] = {};
+        char RData[512] = {0};
         int RDataPos = 0;
 
         bufPos = createRData(buf, bufPos, RData, &RDataPos, resourceRecord[entryNum].type,
@@ -842,12 +844,13 @@ void message2bufQuestion(char *buf, message_t *message, int *endPos)
     for (int entryNum = 0; entryNum < message->query_count; entryNum++)
     {
         // QNAME
-        char QNAME[message->queries[entryNum].name->length + 2];
+        char *QNAME = malloc(message->queries[entryNum].name->length + 2);
         char *transfer = name2message(message->queries[entryNum].name);
         memcpy(QNAME, transfer, message->queries[entryNum].name->length + 2);
         free(transfer);
 
         memcpy(&buf[bufPos], QNAME, message->queries[entryNum].name->length + 2);
+        free(QNAME);
 
         // QTYPE
         bufPos += message->queries[entryNum].name->length + 2;
@@ -870,12 +873,13 @@ void message2bufAnswer(char *buf, message_t *message, int *endPos)
     for (int entryNum = 0; entryNum < message->answer_count; entryNum++)
     {
         // NAME
-        char NAME[message->answers[entryNum].name->length + 2];
+        char *NAME = malloc(message->answers[entryNum].name->length + 2);
         char *transfer = name2message(message->answers[entryNum].name);
         memcpy(NAME, transfer, message->answers[entryNum].name->length + 2);
         free(transfer);
 
         memcpy(&buf[bufPos], NAME, message->answers[entryNum].name->length + 2);
+        free(NAME);
 
         // TYPE
         bufPos += message->answers[entryNum].name->length + 2;
@@ -930,12 +934,13 @@ void message2bufAnswer(char *buf, message_t *message, int *endPos)
                 // CNAME
             {
                 string_t *data = (string_t *) message->answers[entryNum].response_data;
-                char CNAME[data->length + 2];
+                char *CNAME = malloc(data->length + 2);
                 char *transferCNAME = name2message(data);
                 memcpy(CNAME, transferCNAME, data->length + 2);
                 free(transferCNAME);
 
                 memcpy(&buf[bufPos], CNAME, data->length + 2);
+                free(CNAME);
                 bufPos += data->length + 2;
                 break;
             }
