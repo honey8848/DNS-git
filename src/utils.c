@@ -12,7 +12,7 @@ unsigned short char2Short(char high, char low)
 }
 
 string_t *inet4address2string(unsigned int address) {
-    unsigned char divide[4]={};
+    unsigned char divide[4] = {0};
     for (int i = 0; i < 4; i++) {
         divide[3 - i]=*((unsigned char *)&address+i);
         // 大端存储

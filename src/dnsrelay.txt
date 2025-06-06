@@ -1,0 +1,4 @@
+www.google.com 0.0.0.0
+www.pornhub.com 0.0.0.0
+www.baidu.cn 0.0.0.0
+www.baidu.com 1.2.3.4
