@@ -35,7 +35,7 @@ static void generate_ipv6_response(resource_record_t *dest, string_t *name, unsi
 
 static void send_close(uv_handle_t *handler)
 {
-    log_debug("释放在发送请求的过程中分配的内存");
+    log_debug("Freeing memory allocated during send request");
     uv_buf_t *buf = handler->data;
 
     if (buf != NULL)
@@ -56,7 +56,7 @@ static void send_response(message_t *message)
 
     if (client_address == NULL)
     {
-        log_error("未找到client地址, 发送返回包失败");
+        log_error("Client address not found, failed to send response");
         free(feature_vector);
         return;
     }
@@ -78,7 +78,7 @@ static void send_query(message_t *message)
 {
     uv_udp_send_t *send_handler = malloc(sizeof(uv_udp_send_t));
 
-    // 在rfc1035中Z必须为0
+    // Z must be 0 in rfc1035
     message->flags.Z = 0;
     message->additional_count = 0;
     message->authority_count = 0;
@@ -91,44 +91,44 @@ static void send_query(message_t *message)
 
 void socket_init()
 {
-    // 初始化DNS服务器端口
+    // Initialize DNS server port
     uv_ip4_addr("0.0.0.0", 53, &bind_address);
     int result = uv_udp_bind(&bind_socket, (const struct sockaddr *) &bind_address, 0);
     if (result == 0)
     {
-        log_information("绑定DNS服务器socket成功");
+        log_information("DNS server socket bound successfully");
     }
     else
     {
-        log_error("绑定DNS服务器socket失败: %d", result);
+        log_error("Failed to bind DNS server socket: %d", result);
         exit(0);
     }
     bind_socket.close_cb = send_close;
 
     uv_udp_recv_start(&bind_socket, udp_alloc_buffer, bind_socket_read);
-    log_information("开始监听DNS服务器socket");
+    log_information("Started listening on DNS server socket");
 
-    // 初始化请求上游服务器的接口
+    // Initialize upstream server interface
     uv_ip4_addr("0.0.0.0", 0, &query_address);
     result = uv_udp_bind(&query_socket, (const struct sockaddr *) &query_address, 0);
     if (result == 0)
     {
-        log_information("绑定查询socket成功");
+        log_information("Query socket bound successfully");
     }
     else
     {
-        log_error("绑定查询socket失败: %d", result);
+        log_error("Failed to bind query socket: %d", result);
         exit(0);
     }
     query_socket.close_cb = send_close;
 
     uv_udp_recv_start(&query_socket, udp_alloc_buffer, query_socket_read);
-    log_information("开始监听查询socket");
+    log_information("Started listening on query socket");
 
-    // 初始化客户端哈希表
+    // Initialize client hash table
     clients_hash_table = hash_table_new();
 
-    // 初始化dns服务器地址
+    // Initialize DNS server address
     uv_ip4_addr(dns_config.upstream_name, 53, &dns_address);
 }
 
@@ -145,13 +145,13 @@ static void query_socket_read(
 {
     if (number <= 0)
     {
-        log_debug("收到上游服务器错误响应: %zd", number);
+        log_debug("Received error response from upstream server: %zd", number);
         return;
     }
 
-    log_information("收到上游返回数据");
+    log_information("Received data from upstream server");
 
-    // 解析收到的消息
+    // Parse received message
     uv_buf_t receive_buf = {
             .base = buf->base,
             .len = number
@@ -159,8 +159,8 @@ static void query_socket_read(
     message_t *message = buf2message(&receive_buf);
     message_log(message);
 
-    // 将得到的数据放入缓存
-    // 仍然假设A AAAA记录只有一个域名
+    // Cache the received data
+    // Still assuming A and AAAA records have only one domain
     string_t *ipv4_domain = NULL;
     ipv4_cache_t ipv4_cache;
     ipv4_cache.manual = false;
@@ -205,7 +205,7 @@ static void query_socket_read(
             case 5:
             {
                 // CNAME
-                // 读取到CNAME就直接放进缓存中
+                // Read to CNAME directly put into cache
                 cname_cache_t cname_cache;
                 cname_cache.name = string_dup((string_t *) message->answers[i].response_data);
                 cname_cache.timestamp = time(NULL);
@@ -252,7 +252,7 @@ static void query_socket_read(
         ipv6_cache_put(ipv6_domain, &ipv6_cache);
     }
 
-    // 发送DNS回复包
+    // Send DNS reply packet
     send_response(message);
     message_free(message);
 }
@@ -268,7 +268,7 @@ static void bind_socket_read(
 
     char client_address[17];
     uv_ip4_name((const struct sockaddr_in *) address, client_address, 16);
-    log_information("DNS服务器收到%s请求", client_address);
+    log_information("DNS server received %s request", client_address);
 
     uv_buf_t receive_buf = {
             .base = buf->base,
@@ -277,8 +277,8 @@ static void bind_socket_read(
     message_t *message = buf2message(&receive_buf);
     message_log(message);
 
-    // 将客户端地址放入哈希表
-    // 放入哈希表的值由哈希表负责释放
+    // Put client address into hash table
+    // The value of the hash table is responsible for freeing
     struct sockaddr *client_socket = malloc(sizeof(struct sockaddr));
     memcpy(client_socket, address, sizeof(struct sockaddr));
     hash_table_put(clients_hash_table, message2feature_string(message), client_socket);
@@ -289,12 +289,12 @@ static void bind_socket_read(
     back_message->flags.QR = 1;
     back_message->flags.RD = 0;
 
-    // 判断是否命中缓存
-    // 第一遍循环
-    // 判断是否命中缓存以及计算回复消息中answers的个数
+    // Determine whether the cache is hit
+    // First loop
+    // Determine whether the cache is hit and calculate the number of answers in the reply message
     int answer_count = 0;
     bool cached = true;
-    // 判断是否被手动禁止
+    // Determine whether it is manually banned
     bool banned = false;
     for (int i = 0; cached and i < message->query_count; i++)
     {
@@ -304,7 +304,7 @@ static void bind_socket_read(
             {
                 // A
 
-                // 首先处理CNAME
+                // First handle CNAME
                 string_t *domain = message->queries[i].name;
                 cname_cache_t *cname_cache = cname_cache_get(domain);
 
@@ -362,7 +362,7 @@ static void bind_socket_read(
             case 28:
             {
                 // AAAA
-                // 首先处理CNAME
+                // First handle CNAME
                 string_t *domain = message->queries[i].name;
                 cname_cache_t *cname_cache = cname_cache_get(domain);
 
@@ -395,20 +395,20 @@ static void bind_socket_read(
 
     if (!cached)
     {
-        // 没有缓存
+        // No cache
         send_query(message);
     }
     else
     {
         if (banned)
         {
-            // 被封禁
+            // Banned
             back_message->flags.RCODE = 3;
         }
         else
         {
-            // 第二遍循环
-            // 生成返回的消息
+            // Second loop
+            // Generate return message
             back_message->answer_count = answer_count;
             back_message->answers = malloc(sizeof(resource_record_t) * answer_count);
             answer_count = 0;
@@ -420,7 +420,7 @@ static void bind_socket_read(
                     case 1:
                     {
                         // A
-                        // 首先处理CNAME
+                        // First handle CNAME
                         string_t *domain = message->queries[i].name;
                         cname_cache_t *cname_cache = cname_cache_get(domain);
 
@@ -472,7 +472,7 @@ static void bind_socket_read(
                     case 28:
                     {
                         // AAAA
-                        // 首先处理CNAME
+                        // First handle CNAME
                         string_t *domain = message->queries[i].name;
                         cname_cache_t *cname_cache = cname_cache_get(domain);
 

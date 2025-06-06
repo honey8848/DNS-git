@@ -12,7 +12,7 @@ hash_table_t *ipv4_table;
 
 void ipv4_cache_init()
 {
-    log_information("初始化ipv4缓存表");
+    log_information("Initializing IPv4 cache table");
     ipv4_table = hash_table_new();
 }
 
@@ -34,7 +34,7 @@ void ipv4_cache_put(string_t *name, ipv4_cache_t *cache)
     {
         if (old_cache->manual == true)
         {
-            // 手动维护的缓存不清理
+            // Manually maintained cache will not be cleared
             return;
         }
 
@@ -45,14 +45,14 @@ void ipv4_cache_put(string_t *name, ipv4_cache_t *cache)
         old_cache->node = cache->node;
     }
 
-    // 打印添加缓存日志
+    // Print add cache log
     char *domain_print = string_print(name);
     ipv4_node_t *node = cache->node;
     while (node != NULL)
     {
         string_t *address = inet4address2string(node->address);
         char *address_print = string_print(address);
-        log_information("A记录缓存添加%s-%s", domain_print, address_print);
+        log_information("A record cache added %s-%s", domain_print, address_print);
         free(address_print);
         string_free(address);
 
@@ -75,7 +75,7 @@ void ipv4_cache_free()
 void ipv4_cache_clear()
 {
     time_t now = time(NULL);
-    // 记录过时需要删除的缓存
+    // Record expired caches to be deleted
     string_t *result[ipv4_table->count];
     int count = 0;
 
@@ -89,7 +89,7 @@ void ipv4_cache_clear()
 
             if (cache->manual == false and cache->timestamp + cache->ttl < now)
             {
-                // 顺便free点结构体内部的缓存
+                // Free point structure inside cache
                 ipv4_node_t *p = cache->node;
                 while (p != NULL)
                 {
@@ -122,7 +122,7 @@ void ipv4_read_file(const char *file_name)
     FILE *file = fopen(file_name, "r");
     if (file == NULL)
     {
-        log_warning("读取ipv4配置文件失败");
+        log_warning("Failed to read IPv4 configuration file");
         return;
     }
 
@@ -135,8 +135,8 @@ void ipv4_read_file(const char *file_name)
             break;
         }
 
-        // 行的末尾有一个换行符
-        // 需要去掉
+        // The end of a line has a newline character
+        // Need to remove
         string_t *result = string_malloc(buf, strlen(buf) - 1);
         split_array_t *array = string_split(result, ' ');
         if (array->length == 2)
@@ -161,7 +161,7 @@ void ipv4_read_file(const char *file_name)
         }
         else
         {
-            log_warning("非法的ipv4配置: %s", buf);
+            log_warning("Invalid IPv4 configuration: %s", buf);
         }
 
         for (int i = 0; i < array->length; i++)

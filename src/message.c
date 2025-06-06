@@ -1,6 +1,6 @@
 //
 // Created by ricardo on 23-6-16.
-// 解析和封装DNS报文
+// Parse and encapsulate DNS messages
 //
 #include "message.h"
 #include "stdlib.h"
@@ -9,33 +9,33 @@
 #include "utils.h"
 
 /**
- * 采用递归方式在buffer中查找NAME字段
- * @param bufPos 要跳转到的起始字节
- * @param Name 组成NAME的数组
- * @param namePos 组成NAME的数组的当前大小
- * @return int 跳转前的所在字节
+ * Find NAME field in buffer using recursion
+ * @param bufPos Starting byte position to jump to
+ * @param Name Array composing NAME
+ * @param namePos Current size of array composing NAME
+ * @return int Byte position before jump
  */
 int createName(const char *buf, int bufPos, char[], int *namePos);
 
 /**
- * 创建响应数据字段
- * @param buf 收到的数据
- * @param bufPos 当前处理到的位置
- * @param RData 响应数据
- * @param RDataPos 当前处理到的位置
- * @param type 响应数据类型
- * @param length 响应数据的长度
- * @return 处理之后的缓冲区位置
+ * Create response data field
+ * @param buf Received data
+ * @param bufPos Current processing position
+ * @param RData Response data
+ * @param RDataPos Current processing position
+ * @param type Response data type
+ * @param length Response data length
+ * @return Buffer position after processing
  */
 int createRData(const char *buf, int bufPos, char RData[], int *RDataPos, int type, int length);
 
 /**
- * 解析消息头
+ * Parse message header
  */
 void buf2messageHeader(const uv_buf_t *buf, message_t *message);
 
 /**
- * 解析消息查询部分
+ * Parse message query section
  * @param buf
  * @param message
  * @param endPos
@@ -44,7 +44,7 @@ void buf2messageHeader(const uv_buf_t *buf, message_t *message);
 void buf2messageQuestion(const char *buf, message_t *message, int *endPos);
 
 /**
- * 解析消息恢复部分
+ * Parse message response section
  * @param buf
  * @param message
  * @param endPos
@@ -54,45 +54,43 @@ void buf2messageQuestion(const char *buf, message_t *message, int *endPos);
 void buf2messageRR(const char *buf, message_t *message, const int *endPos, enum RR_TYPE type);
 
 /**
- * 封装报头
- * @param buf 生成的buffer
- * @param message 封装信息
- * @param endPos 这个函数执行完毕后，buf的长度
+ * Encapsulate header
+ * @param buf Generated buffer
+ * @param message Encapsulation information
+ * @param endPos Length of buf after this function completes
  */
 void message2bufHeader(char *buf, message_t *message, int *endPos);
 
 /**
- * 封装报文Question段
- * @param buf 生成的buffer
- * @param message 封装信息
- * @param endPos 这个函数执行完毕后，buf的长度
+ * Encapsulate message Question section
+ * @param buf Generated buffer
+ * @param message Encapsulation information
+ * @param endPos Length of buf after this function completes
  */
 void message2bufQuestion(char *buf, message_t *message, int *endPos);
 
 /**
- * 封装报文Answer段
- * @param buf 生成的buffer
- * @param message 封装信息
- * @param endPos 这个函数执行完毕后，buf的长度
+ * Encapsulate message Answer section
+ * @param buf Generated buffer
+ * @param message Encapsulation information
+ * @param endPos Length of buf after this function completes
  */
 void message2bufAnswer(char *buf, message_t *message, int *endPos);
 
-
 /**
- * 将传入的char中的每一位分离到str数组中
- * @param ch 要传入的char
- * @param bit 输出的八位bit数组指针
+ * Separate each bit of the input char into str array
+ * @param ch Input char
+ * @param bit Output 8-bit array pointer
  */
 void char2bit(char ch, char *bit);
 
 /**
- * 将message中域名部分转换为DNS报文中的域名存储方式(length+mainPart+\0)
- * @param domain_name message中域名部分
- * @warning 使用后记得free掉这个返回值
- * @return 一个DNS报文中的域名字符串
+ * Convert domain name part in message to domain name storage format in DNS message (length+mainPart+\0)
+ * @param domain_name Domain name part in message
+ * @warning Remember to free this return value after use
+ * @return A domain name string in DNS message
  */
 char *name2message(string_t *domain_name);
-
 
 uv_buf_t *message2buf(message_t *message)
 {
@@ -236,7 +234,6 @@ void message_free(message_t *message)
     free(message);
 }
 
-
 void buf2messageHeader(const uv_buf_t *buf, message_t *message)
 {
     message->id = char2Short(buf->base[0], buf->base[1]);
@@ -309,7 +306,6 @@ void buf2messageQuestion(const char *buf, message_t *message, int *endPos)
 
 void buf2messageRR(const char *buf, message_t *message, const int *endPos, enum RR_TYPE type)
 {
-
     int bufPos = *endPos;
     resource_record_t *resourceRecord;
     unsigned short resourceRecordCount = 0;
@@ -474,7 +470,6 @@ int createName(const char *buf, int bufPos, char Name[], int *namePos)
 
 int createRData(const char *buf, int bufPos, char RData[], int *RDataPos, int type, int length)
 {
-
     switch (type)
     {
         case 1:
@@ -494,7 +489,6 @@ int createRData(const char *buf, int bufPos, char RData[], int *RDataPos, int ty
 
 void char2bit(char ch, char *bit)
 {
-
     for (int j = 0; j < 8; j++)
     {
         /*
@@ -516,7 +510,6 @@ void char2bit(char ch, char *bit)
  */
 void printMessage(message_t *message)
 {
-
     log_debug("------DNS Message------\n");
     log_debug("id: %x\n", (unsigned short) message->id);
 
@@ -735,7 +728,6 @@ void dec2bin(int dec, int *bin, int length)
     }
 }
 
-
 string_t *message2feature_string(message_t *message)
 {
     string_t *result = malloc(sizeof(string_t));
@@ -789,10 +781,8 @@ char *name2message(string_t *domain_name)
     return output;
 }
 
-
 void message2bufHeader(char *buf, message_t *message, int *endPos)
 {
-
     int bufPos = 0;
 
     // id
@@ -846,10 +836,8 @@ void message2bufHeader(char *buf, message_t *message, int *endPos)
     *endPos = bufPos + 2;
 }
 
-
 void message2bufQuestion(char *buf, message_t *message, int *endPos)
 {
-
     int bufPos = 0;
     for (int entryNum = 0; entryNum < message->query_count; entryNum++)
     {
@@ -860,8 +848,6 @@ void message2bufQuestion(char *buf, message_t *message, int *endPos)
         free(transfer);
 
         memcpy(&buf[bufPos], QNAME, message->queries[entryNum].name->length + 2);
-
-
 
         // QTYPE
         bufPos += message->queries[entryNum].name->length + 2;
@@ -877,10 +863,8 @@ void message2bufQuestion(char *buf, message_t *message, int *endPos)
     }
 }
 
-
 void message2bufAnswer(char *buf, message_t *message, int *endPos)
 {
-
     int bufPos = 0;
 
     for (int entryNum = 0; entryNum < message->answer_count; entryNum++)
@@ -892,8 +876,6 @@ void message2bufAnswer(char *buf, message_t *message, int *endPos)
         free(transfer);
 
         memcpy(&buf[bufPos], NAME, message->answers[entryNum].name->length + 2);
-
-
 
         // TYPE
         bufPos += message->answers[entryNum].name->length + 2;
@@ -963,8 +945,6 @@ void message2bufAnswer(char *buf, message_t *message, int *endPos)
                 bufPos += message->answers[entryNum].response_data_length;
                 break;
         }
-
-
     }
     *endPos += bufPos;
     // 最后会停在bufPos的最后一位的下一位

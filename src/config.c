@@ -16,7 +16,7 @@ dns_config_t config_init(int argc, char **argv)
     config.cname_config_file = NULL;
     config.upstream_name = "10.3.9.44";
 
-    log_debug("读取命令行配置参数");
+    log_debug("Reading command line configuration parameters");
     for (int i = 1; i < argc; i++)
     {
         if (*argv[i] == '-')
@@ -28,22 +28,22 @@ dns_config_t config_init(int argc, char **argv)
                     exit(0);
                 case 's':
                     config.upstream_name = argv[i + 1];
-                    log_information("设置上游服务器: %s", config.upstream_name);
+                    log_information("Setting upstream server: %s", config.upstream_name);
                     i++;
                     break;
                 case '4':
                     config.ipv4_config_file = argv[i + 1];
-                    log_information("读取ipv4配置文件: %s", config.ipv4_config_file);
+                    log_information("Reading IPv4 config file: %s", config.ipv4_config_file);
                     i++;
                     break;
                 case '6':
                     config.ipv6_config_file = argv[i + 1];
-                    log_information("读取ipv6配置文件: %s", config.ipv6_config_file);
+                    log_information("Reading IPv6 config file: %s", config.ipv6_config_file);
                     i++;
                     break;
                 case 'c':
                     config.cname_config_file = argv[i + 1];
-                    log_information("读取cname配置文件: %s", config.cname_config_file);
+                    log_information("Reading CNAME config file: %s", config.cname_config_file);
                     i++;
                     break;
                 case 'l':
@@ -51,7 +51,7 @@ dns_config_t config_init(int argc, char **argv)
                     logging_level_t level = *argv[i+1] - 48;
                     if (level > 3)
                     {
-                        log_warning("错误的日志配置：%d", level);
+                        log_warning("Invalid logging level: %d", level);
                     }
                     else
                     {
@@ -59,13 +59,13 @@ dns_config_t config_init(int argc, char **argv)
                     }
                 }
                 default:
-                    log_information("未知的配置选项: %s", argv[i]);
+                    log_information("Unknown configuration option: %s", argv[i]);
                     break;
             }
         }
         else
         {
-            log_information("未知的配置选项: %s", argv[i]);
+            log_information("Unknown configuration option: %s", argv[i]);
         }
     }
 
@@ -74,10 +74,10 @@ dns_config_t config_init(int argc, char **argv)
 
 void config_help_print()
 {
-    log_information("-h 打印帮助信息");
-    log_information("-s [server_address] 设置上游服务器地址");
-    log_information("-4 [file_name] ipv4配置文件");
-    log_information("-6 [file_name] ipv6配置文件");
-    log_information("-c [file_name] cname配置文件");
-    log_information("-l [0/1/2/3] 设置日志等级 0-debug 1-info 2-warn 3-error");
+    log_information("-h Print help information");
+    log_information("-s [server_address] Set upstream server address");
+    log_information("-4 [file_name] IPv4 configuration file");
+    log_information("-6 [file_name] IPv6 configuration file");
+    log_information("-c [file_name] CNAME configuration file");
+    log_information("-l [0/1/2/3] Set logging level 0-debug 1-info 2-warn 3-error");
 }

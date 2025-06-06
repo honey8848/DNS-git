@@ -13,7 +13,7 @@ hash_table_t *ipv6_table;
 void ipv6_cache_init()
 {
     ipv6_table = hash_table_new();
-    log_information("初始化ipv6缓存表");
+    log_information("Initializing IPv6 cache table");
 }
 
 void ipv6_cache_put(string_t *name, ipv6_cache_t *cache)
@@ -39,14 +39,14 @@ void ipv6_cache_put(string_t *name, ipv6_cache_t *cache)
         old_cache->node = cache->node;
     }
 
-    // 打印添加缓存日志
+    // Print add cache log
     char *domain_print = string_print(name);
     ipv6_node_t *node = cache->node;
     while (node != NULL)
     {
         string_t *address = inet6address2string(node->address);
         char *address_print = string_print(address);
-        log_information("AAAA记录缓存添加%s-%s", domain_print, address_print);
+        log_information("AAAA record cache added %s-%s", domain_print, address_print);
         free(address_print);
         string_free(address);
 
@@ -68,8 +68,8 @@ void ipv6_cache_free()
 void ipv6_cache_clear()
 {
     time_t now = time(NULL);
-    // 记录过时需要删除的缓存
-    string_t *result[ipv6_table->count];
+    // Record expired caches to be deleted
+    string_t **result = malloc(sizeof(string_t *) * ipv6_table->count);
     int count = 0;
 
     for (int i = 0; i < ipv6_table->capacity; i++)
@@ -82,7 +82,7 @@ void ipv6_cache_clear()
 
             if (cache->timestamp + cache->ttl < now)
             {
-                // 顺便free点结构体内部的缓存
+                // Free point structure inside cache
                 ipv6_node_t *p = cache->node;
                 while (p != NULL)
                 {
@@ -103,5 +103,7 @@ void ipv6_cache_clear()
     {
         hash_table_remove(ipv6_table, result[i]);
     }
+
+    free(result);
 }
 

@@ -15,8 +15,8 @@ static void sigint_callback(uv_signal_t *handle, int signum)
 {
     if (signum == SIGINT)
     {
-        // 收到control-c
-        log_information("退出程序");
+        // Received control-c
+        log_information("Exiting program");
 
         socket_free();
         ipv4_cache_free();
@@ -29,8 +29,8 @@ static void sigint_callback(uv_signal_t *handle, int signum)
 
 static void clear_callback(uv_timer_t *handler)
 {
-    // 每隔120秒干掉过期的缓存
-    log_information("清除过期的缓存");
+    // Clear expired cache every 120 seconds
+    log_information("Clearing expired cache");
     ipv4_cache_clear();
     ipv6_cache_clear();
     cname_cache_clear();
@@ -39,7 +39,7 @@ static void clear_callback(uv_timer_t *handler)
 int main(int argc, char **argv)
 {
     dns_config = config_init(argc, argv);
-    log_information("程序启动");
+    log_information("Program started");
 
     loop = uv_default_loop();
     uv_udp_init(loop, &query_socket);

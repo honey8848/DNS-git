@@ -11,7 +11,7 @@ hash_table_t *cname_table;
 
 void cname_cache_init()
 {
-    log_information("初始化cname缓存");
+    log_information("Initializing CNAME cache");
     cname_table = hash_table_new();
 }
 
@@ -26,7 +26,7 @@ void cname_cache_put(string_t *name, cname_cache_t *cache)
 
     char *key = string_print(name);
     char *value = string_print(item->name);
-    log_information("cname缓存表添加%s->%s", key, value);
+    log_information("CNAME cache table added %s->%s", key, value);
     free(key);
     free(value);
 

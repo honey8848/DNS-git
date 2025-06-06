@@ -25,10 +25,10 @@ hash_table_t *hash_table_new()
 }
 
 /**
- * 想哈希表中添加一个节点
- * @param table 哈希表对象
- * @param name 节点名称
- * @param data 节点数据
+ * Add a node to the hash table
+ * @param table Hash table object
+ * @param name Node name
+ * @param data Node data
  */
 static void add_node(hash_table_t *table, string_t *name, void *data)
 {
@@ -43,14 +43,14 @@ static void add_node(hash_table_t *table, string_t *name, void *data)
 
     if (node->name == NULL)
     {
-        // 这个节点中没有数据
+        // This node has no data
         node->name = name;
         node->data = data;
         node->next = NULL;
     }
     else
     {
-        // 节点中还含有数据
+        // Node still contains data
         hash_node_t *newNode = malloc(sizeof(hash_node_t));
         newNode->name = name;
         newNode->data = data;
@@ -63,8 +63,8 @@ static void add_node(hash_table_t *table, string_t *name, void *data)
 }
 
 /**
- * 扩大哈希表
- * @param table 哈希表指针
+ * Expand hash table
+ * @param table Hash table pointer
  */
 static void resize(hash_table_t *table)
 {
